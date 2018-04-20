@@ -117,6 +117,22 @@ case "$1" in
 			echo
 		fi
 
+		echo "Executing startup scripts from '/docker-entrypoint-rundb.d':"
+
+		for f in /docker-entrypoint-rundb.d/*; do
+			echo "found file /docker-entrypoint-rundb.d/$f"
+			case "$f" in
+				*.sh)     echo "[IMPORT] $0: running $f"; . "$f" ;;
+				*.sql)    echo "[IMPORT] $0: running $f"; echo "exit" | su oracle -c "$CHARSET_MOD $ORACLE_HOME/bin/sqlplus -S / as sysdba @$f"; echo ;;
+				*.dmp)    echo "[IMPORT] $0: running $f"; impdp $f ;;
+				*)        echo "[IMPORT] $0: ignoring $f" ;;
+			esac
+			echo
+		done
+
+		echo "Import finished"
+		echo
+
 		echo "Database ready to use. Enjoy! ;)"
 
 		##
